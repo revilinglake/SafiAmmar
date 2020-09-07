@@ -1,0 +1,320 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <windows.h>
+#include <string.h>
+FILE *fp, *ft;
+COORD coord = {0,0};
+
+void gotoxy(int x,int y)
+{
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),coord);
+}
+void login()
+{
+	int a=0,i=0;
+    char uname[10],c=' ';
+    char pword[10],code[10];
+    char user[10]="user";
+    char pass[10]="pass";
+
+    gotoxy(12,2);
+    printf("LOGIN PORTAL");
+    gotoxy(2,4);
+    printf("Enter Username: ");
+	scanf("%s", &uname);
+	gotoxy(2,6);
+	printf("Enter Password: ");
+	while(i<10)
+	{
+	    pword[i]=getch();
+	    c=pword[i];
+	    if(c==13) break;
+	    else printf("*");
+	    i++;
+	}
+	pword[i]='\0';
+	i=0;
+    if(strcmp(uname,"admin")==0 && strcmp(pword,"password")==0)
+    {
+        gotoxy(2,8);
+        printf("Login Succesfull!");
+    }
+	else
+	{
+	    gotoxy(2,8);
+		printf("The username or password entered is incorrect.\n  Exiting application.");
+		getch();
+		fclose(fp);
+        exit(0);
+	}
+}
+
+int main()
+{
+    char another, choice, cho;
+    struct emp
+    {
+        char name[40];
+        int age;
+        float bs;
+    };
+
+    struct emp e;
+
+    char empname[40];
+
+    long int recsize;
+    fp = fopen("EMP.DAT","rb+");
+    if(fp == NULL)
+    {
+        fp = fopen("EMP.DAT","wb+");
+        if(fp == NULL)
+        {
+            printf("Connot open file");
+            exit(1);
+        }
+    }
+    recsize = sizeof(e);
+    while(1)
+    {
+        system("cls");
+        gotoxy(45,5);
+        printf("Employee Management System");
+        gotoxy(30,10);
+        printf("1. Administrator");
+        gotoxy(30,12);
+        printf("2. Search Employee Details");
+        gotoxy(30,14);
+        printf("Your Choice: ");
+        fflush(stdin);
+        cho= getche();
+        switch(cho)
+        {
+            case '1':
+                {
+                    system("cls");
+                    login();
+                    while(1)
+                    {
+
+                    system("cls");
+                    gotoxy(45,5);
+                    printf("ADMINISTRATOR");
+                    gotoxy(30,10);
+                    printf("1. Add Record");
+                    gotoxy(30,12);
+                    printf("2. List Records");
+                    gotoxy(30,14);
+                    printf("3. Modify Records");
+                    gotoxy(30,16);
+                    printf("4. Delete Records");
+                    gotoxy(30,18);
+                    printf("5. Search");
+                    gotoxy(30,20);
+                    printf("Any other key to Exit");
+                    gotoxy(30,22);
+                    printf("Your Choice: ");
+                    fflush(stdin);
+                    choice  = getche();
+                    switch(choice)
+                    {
+                        case '1':
+                        system("cls");
+                        fseek(fp,0,SEEK_END);
+                        another = 'y';
+                        while(another == 'y')
+                        {
+                            printf("\nEnter name: ");
+                            scanf("%s",e.name);
+                            printf("\nEnter age: ");
+                            scanf("%d", &e.age);
+                            printf("\nEnter basic salary: ");
+                            scanf("%f", &e.bs);
+
+                            fwrite(&e,recsize,1,fp);
+
+                            printf("\nAdd another record(y/n) ");
+                            fflush(stdin);
+                            another = getche();
+                        }
+                        break;
+                    case '2':
+                        system("cls");
+                        rewind(fp);
+                        while(fread(&e,recsize,1,fp)==1)
+                        {
+                            printf("\nName:%s \nAge:%d \nSalary:%.2f\n\n",e.name,e.age,e.bs);
+                        }
+                        getch();
+                        break;
+
+                    case '3':
+                        system("cls");
+                        another = 'y';
+                        while(another == 'y')
+                        {
+                            printf("Enter the employee name to modify: ");
+                            scanf("%s", empname);
+                            rewind(fp);
+                            while(fread(&e,recsize,1,fp)==1)
+                            {
+                                if(strcmp(e.name,empname) == 0)
+                                {
+                                    printf("\nEnter new Name followed by Age and Salary: ");
+                                    scanf("%s%d%f",e.name,&e.age,&e.bs);
+                                    fseek(fp,-recsize,SEEK_CUR);
+                                    fwrite(&e,recsize,1,fp);
+                                    break;
+                                }
+                            }
+                            printf("\nModify another record(y/n)");
+                            fflush(stdin);
+                            another = getche();
+                        }
+                        break;
+                    case '4':
+                        system("cls");
+                        another = 'y';
+                        while(another == 'y')
+                        {
+                            printf("\nEnter name of employee to delete: ");
+                            scanf("%s",empname);
+                            ft = fopen("Temp.dat","wb");
+                            rewind(fp);
+                            while(fread(&e,recsize,1,fp) == 1)
+                            {
+                                if(strcmp(e.name,empname) != 0)
+                                {
+                                    fwrite(&e,recsize,1,ft);
+                                }
+                            }
+                            fclose(fp);
+                            fclose(ft);
+                            remove("EMP.DAT");
+                            rename("Temp.dat","EMP.DAT");
+                            fp = fopen("EMP.DAT", "rb+");
+                            printf("Delete another record(y/n)");
+                            fflush(stdin);
+                            another = getche();
+                        }
+                        break;
+                    case '5':
+                        {
+                            int datafound=0;
+                            char employeename[15];
+                            char another;
+                            do
+                            {
+                                system("cls");
+                                fseek(fp,0,SEEK_SET);
+                                gotoxy(0,0);
+                                printf("Search Employee Record");
+                                gotoxy(4,2);
+                                printf("Enter name of employee: ");
+                                gets(employeename);
+                                while(fread(&e,sizeof(e),1,fp)==1)
+                                {
+                                    if(strcmp(e.name,employeename)==0)
+                                    {
+                                        datafound=1;
+                                        break;
+                                    }
+                                }
+                                if(datafound==1)
+                                {
+                                    gotoxy(5,4);
+                                    printf("Record Found - \n");
+                                    gotoxy(6,5);
+                                    printf("Name: ");
+                                    printf("%s",e.name);
+                                    gotoxy(6,6);
+                                    printf("Age: ");
+                                    printf("%d",e.age);
+                                    gotoxy(6,7);
+                                    printf("Basic Salary:");
+                                    printf("%.2f",e.bs);
+                                    gotoxy(7,9);
+                                    datafound=0;
+                                }
+                                else
+                                {
+                                    gotoxy(10,8);
+                                    printf("No Record found.");
+                                }
+                                gotoxy(12,10);
+                                printf("Search another employee?(y/n)?");
+                                fflush(stdin);
+                                another=getch();
+                                fflush(stdin);
+                            }while(another=='Y'|| another=='y');
+                            break;
+                        }
+                case '6':
+                    fclose(fp);
+                    exit(0);
+                default:
+                    fclose(fp);
+                    exit(0);
+
+                    }
+                }
+        }
+            case '2':
+                {
+                    int datafound=0;
+                    char employeename[15];
+                    char another;
+                    do
+                    {
+                        system("cls");
+                        fseek(fp,0,SEEK_SET);
+                        gotoxy(0,0);
+                        printf("Search Employee Record");
+                        gotoxy(4,2);
+                        printf("Enter name of employee: ");
+                        gets(employeename);
+                        while(fread(&e,sizeof(e),1,fp)==1)
+                        {
+                            if(strcmp(e.name,employeename)==0)
+                            {
+                                datafound=1;
+                                break;
+                            }
+                        }
+                        if(datafound==1)
+                        {
+                            gotoxy(5,4);
+                            printf("Record Found - \n");
+                            gotoxy(6,5);
+                            printf("Name: ");
+                            printf("%s",e.name);
+                            gotoxy(6,6);
+                            printf("Age: ");
+                            printf("%d",e.age);
+                            gotoxy(6,7);
+                            printf("Basic Salary:");
+                            printf("%.2f",e.bs);
+                            gotoxy(7,9);
+                        }
+                        else
+                        {
+                            gotoxy(10,8);
+                            printf("No Record found.");
+                        }
+                        gotoxy(12,10);
+                        printf("Search another employee?(y/n)?");
+                        fflush(stdin);
+                        another=getch();
+                        fflush(stdin);
+                    }while(another=='Y'|| another=='y');
+                    break;
+                }
+
+      }
+    }
+    return 0;
+}
+
